@@ -5024,3 +5024,243 @@ Package Line: package com.myapp.math; (First line of Calculator.java)
 Import Line: import com.myapp.math.Calculator;
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------
+Comparator vs Comparable in Java
+
+In Java, both Comparable and Comparator are used to sort objects, but they serve different purposes and are used in different ways. Here is a detailed comparison with examples:
+
+--------------------------------------------------------------------------------
+1. Comparable
+
+- Purpose: Defines the natural/default ordering of objects of a class.
+- How: The class itself implements the Comparable<T> interface and overrides the compareTo(T o) method.
+- Where: Sorting is based on a single logic (e.g., sort by name).
+- Method: int compareTo(T o)
+- Modification: You must modify the class whose objects you want to sort.
+- Sorting Logic: Only one sort logic per class (natural order).
+
+Example:
+
+public class Student implements Comparable<Student> {
+    String name;
+    int age;
+
+    public Student(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+
+    // Natural ordering: by name
+    @Override
+    public int compareTo(Student other) {
+        return this.name.compareTo(other.name);
+    }
+
+    @Override
+    public String toString() {
+        return name + " (" + age + ")";
+    }
+}
+
+Usage:
+
+import java.util.*;
+
+public class Main {
+    public static void main(String[] args) {
+        List<Student> list = new ArrayList<>();
+        list.add(new Student("Alice", 22));
+        list.add(new Student("Bob", 20));
+        list.add(new Student("Charlie", 21));
+
+        Collections.sort(list); // Uses compareTo (by name)
+        System.out.println(list); // [Alice (22), Bob (20), Charlie (21)]
+    }
+}
+
+--------------------------------------------------------------------------------
+2. Comparator
+
+- Purpose: Defines custom or multiple orderings for objects, separate from their natural order.
+- How: Create a separate class (or anonymous class/lambda) that implements Comparator<T> and overrides compare(T o1, T o2).
+- Where: Sorting can be based on different logics (e.g., by age, by name, etc.).
+- Method: int compare(T o1, T o2)
+- Modification: No need to modify the class whose objects you want to sort.
+- Sorting Logic: Can define many comparators for different sorting logic.
+
+Example:
+
+import java.util.*;
+
+class AgeComparator implements Comparator<Student> {
+    @Override
+    public int compare(Student s1, Student s2) {
+        return Integer.compare(s1.age, s2.age);
+    }
+}
+
+Usage:
+
+public class Main {
+    public static void main(String[] args) {
+        List<Student> list = new ArrayList<>();
+        list.add(new Student("Alice", 22));
+        list.add(new Student("Bob", 20));
+        list.add(new Student("Charlie", 21));
+
+        // Sort by age using Comparator
+        Collections.sort(list, new AgeComparator());
+        System.out.println(list); // [Bob (20), Charlie (21), Alice (22)]
+    }
+}
+
+Or using a lambda (Java 8+):
+
+Collections.sort(list, (s1, s2) -> s1.age - s2.age);
+
+--------------------------------------------------------------------------------
+Summary Table
+
+| Feature         | Comparable                        | Comparator                          |
+|-----------------|-----------------------------------|-------------------------------------|
+| Package         | java.lang                         | java.util                           |
+| Method          | compareTo(Object o)               | compare(Object o1, Object o2)       |
+| Sorting Logic   | Single (natural order)            | Multiple/custom (external)          |
+| Where Defined   | In the class itself               | Separate class or anonymous/lambda  |
+| Modification    | Modifies the class                | No need to modify the class         |
+| Usage           | Collections.sort(list)            | Collections.sort(list, comparator)  |
+
+--------------------------------------------------------------------------------
+In short:
+- Use Comparable for default, single sorting logic (natural order).
+- Use Comparator for custom or multiple sorting logics, or when you can’t modify the class.
+
+--------------------------------------------------------------------------------
+
+Streams in Java
+
+Java Streams (introduced in Java 8) provide a modern, functional-style way to process sequences of elements (like collections, arrays, or I/O channels). They allow you to perform complex data processing (filtering, mapping, sorting, aggregating, etc.) in a concise, readable, and often more efficient way.
+
+--------------------------------------------------------------------------------
+1. What is a Stream?
+
+- A Stream is **not** a data structure; it does **not** store elements.
+- It is a pipeline of computational steps that process data from a source (like a Collection, array, or I/O channel).
+- Streams support **functional-style operations** (like map, filter, reduce) and can be processed **sequentially or in parallel**.
+- Streams are **lazy**: computation is only performed when a terminal operation is invoked.
+
+--------------------------------------------------------------------------------
+2. Stream Pipeline
+
+A typical stream pipeline consists of:
+- **Source:** Where the data comes from (e.g., a List, Set, array, file).
+- **Intermediate Operations:** Transform the stream (e.g., filter, map, sorted). These are lazy and return a new stream.
+- **Terminal Operation:** Produces a result or side-effect (e.g., collect, forEach, reduce). This triggers the actual computation.
+
+--------------------------------------------------------------------------------
+3. Most Important Stream Methods
+
+**Intermediate Operations (return a Stream):**
+- `filter(Predicate<T>)`: Selects elements that match a condition.
+- `map(Function<T, R>)`: Transforms each element.
+- `flatMap(Function<T, Stream<R>>)` : Flattens nested streams.
+- `distinct()`: Removes duplicates.
+- `sorted()`, `sorted(Comparator<T>)`: Sorts elements.
+- `limit(long n)`: Truncates the stream to n elements.
+- `skip(long n)`: Skips the first n elements.
+- `peek(Consumer<T>)`: Performs an action for each element (mainly for debugging).
+
+**Terminal Operations (produce a result):**
+- `forEach(Consumer<T>)`: Performs an action for each element.
+- `collect(Collector)`: Converts the stream into a collection or other structure (e.g., List, Set, Map).
+- `toArray()`: Converts the stream to an array.
+- `reduce(BinaryOperator<T>)`: Reduces the stream to a single value.
+- `count()`: Counts the number of elements.
+- `anyMatch(Predicate<T>)`, `allMatch(Predicate<T>)`, `noneMatch(Predicate<T>)`: Checks if any/all/none elements match a condition.
+- `findFirst()`, `findAny()`: Returns the first/any element (as Optional).
+
+**Creation Methods:**
+- `stream()`: From a Collection.
+- `Stream.of(...)`: From values.
+- `Arrays.stream(array)`: From an array.
+- `Stream.generate(Supplier<T>)`, `Stream.iterate(...)`: Infinite streams.
+
+--------------------------------------------------------------------------------
+4. Example Using All Major Methods
+
+```java
+import java.util.*;
+import java.util.stream.*;
+
+public class StreamExample {
+    public static void main(String[] args) {
+        List<String> names = Arrays.asList("Alice", "Bob", "Charlie", "David", "Bob", "Eve", "Frank", "George");
+
+        // Stream pipeline demonstrating most important methods
+        List<String> result = names.stream()
+            .filter(name -> name.length() > 3)                // Keep names longer than 3 chars
+            .map(String::toUpperCase)                          // Convert to uppercase
+            .distinct()                                        // Remove duplicates
+            .sorted()                                          // Sort alphabetically
+            .peek(System.out::println)                         // Print each element (for debugging)
+            .limit(5)                                          // Take only first 5
+            .collect(Collectors.toList());                     // Collect to a List
+
+        System.out.println("Result: " + result);
+
+        // Terminal operations
+        long count = names.stream().count();                   // Count elements
+        boolean anyBob = names.stream().anyMatch(n -> n.equals("Bob")); // Any "Bob"?
+        boolean allLong = names.stream().allMatch(n -> n.length() > 2); // All names > 2 chars?
+        Optional<String> first = names.stream().findFirst();   // First element
+
+        // Reduce example: Concatenate all names with a comma
+        String concatenated = names.stream().reduce((a, b) -> a + ", " + b).orElse("");
+
+        System.out.println("Count: " + count);
+        System.out.println("Any Bob? " + anyBob);
+        System.out.println("All names > 2 chars? " + allLong);
+        System.out.println("First: " + first.orElse("None"));
+        System.out.println("Concatenated: " + concatenated);
+
+        // flatMap example: Split names into characters and flatten
+        List<Character> chars = names.stream()
+            .flatMap(name -> name.chars().mapToObj(c -> (char) c))
+            .collect(Collectors.toList());
+        System.out.println("All characters: " + chars);
+
+        // toArray example
+        String[] namesArray = names.stream().toArray(String[]::new);
+        System.out.println("Names array: " + Arrays.toString(namesArray));
+    }
+}
+```
+
+--------------------------------------------------------------------------------
+5. Use Cases for Streams
+
+- **Bulk Data Processing:** When you need to process, filter, or transform large collections of data.
+- **Functional Programming:** When you want to write concise, readable, and declarative code.
+- **Parallel Processing:** When you want to leverage multi-core CPUs easily (`parallelStream()`).
+- **Chained Operations:** When you need to perform multiple operations in sequence (e.g., filter, map, sort, collect).
+- **Readability:** When you want to avoid verbose for-loops and mutable state.
+
+**When to Use Streams:**
+- When you need to process collections in a pipeline fashion.
+- When you want to avoid external iteration (for/while loops) and use internal iteration.
+- When you want to write code that is easy to read, maintain, and parallelize.
+
+**When NOT to Use Streams:**
+- When you need indexed access or modify the underlying collection during iteration.
+- For very simple operations where a loop is clearer.
+- When performance is critical and you need to avoid the overhead of streams.
+
+--------------------------------------------------------------------------------
+Summary
+
+Streams in Java provide a powerful, expressive, and efficient way to process data. They are best used for transforming, filtering, and aggregating collections in a functional style, especially when you want to chain multiple operations or leverage parallelism.
+
+---------------------------------------------------------------------------------------
+
+
+
+
