@@ -5363,6 +5363,108 @@ In summary:
 
 ---------------------------------------------------------------------------
 
+Reflections in Java 
+
+**Java Reflection** is a powerful feature that allows a program to examine or modify the behavior of methods, classes, and interfaces at **runtime**.
+
+Normally, in Java, everything is determined at **compile time** (e.g., you know exactly which method you are calling). With Reflection, you can inspect a class, find out its methods/fields, and even call them—all without knowing what they are until the program is actually running.
+
+---
+
+## 1. How Reflection Works
+
+Every time the JVM loads a class, it creates an internal object of type `java.lang.Class`. Reflection uses this object to peek inside the class's blueprint.
+
+### The Core Classes:
+
+| Class | Purpose |
+| --- | --- |
+| **`Class`** | Provides metadata about the class (name, package, superclass). |
+| **`Field`** | Provides information about, and dynamic access to, a single field (variable). |
+| **`Method`** | Provides information about, and access to, a single method. |
+| **`Constructor`** | Provides information about, and access to, a single constructor. |
+
+---
+
+## 2. Practical Examples
+
+### A. Inspecting a Class at Runtime
+
+Imagine you have a class, but you don't know what methods it has. You can use Reflection to list them:
+
+```java
+import java.lang.reflect.Method;
+
+public class ReflectionTest {
+    public static void main(String[] args) throws Exception {
+        // Get the Class object for HibernateStudent
+        Class<?> clazz = Class.forName("org.example.entities.HibernateStudent");
+
+        System.out.println("Class Name: " + clazz.getName());
+
+        // Get all methods (even inherited ones)
+        Method[] methods = clazz.getMethods();
+        for (Method m : methods) {
+            System.out.println("Method Found: " + m.getName());
+        }
+    }
+}
+
+```
+
+### B. Creating an Instance Dynamically (How Hibernate does it)
+
+As we discussed earlier, Hibernate doesn't know your class name when it's being written. It uses Reflection to "spawn" your objects:
+
+```java
+Class<?> clazz = Class.forName("org.example.entities.HibernateStudent");
+
+// This is equivalent to: HibernateStudent s = new HibernateStudent();
+Object obj = clazz.getDeclaredConstructor().newInstance(); 
+
+```
+
+### C. Accessing Private Fields (Breaking Encapsulation)
+
+Reflection is so powerful that it can even access `private` fields that are normally hidden. This is how many testing frameworks (like JUnit) work.
+
+```java
+Field field = clazz.getDeclaredField("sid");
+
+// Bypass the 'private' keyword!
+field.setAccessible(true); 
+
+// Set the value of 'sid' on the object we created
+field.set(obj, 101); 
+
+```
+
+---
+
+## 3. Why is Reflection used?
+
+If Reflection is "slower" and "breaks rules," why use it?
+
+1. **Frameworks (Hibernate, Spring):** Spring uses Reflection to inject dependencies (`@Autowired`). Hibernate uses it to map DB rows to your `@Entity` fields.
+2. **Development Tools:** Your IDE (IntelliJ/Eclipse) uses reflection to show you the list of methods when you type a dot (`.`).
+3. **Testing:** Mocking libraries like **Mockito** use reflection to create "fake" versions of your objects.
+
+---
+
+## 4. The Downsides
+
+* **Performance Overhead:** Because the JVM has to "search" for methods at runtime, it is slower than direct Java code.
+* **Security Restrictions:** A security manager might prevent reflection on certain sensitive classes.
+* **Maintenance:** If you change a field name but rely on a Reflection string (`"sid"`) to find it, your code will crash at runtime instead of showing a compile-time error.
+
+---
+
+## 5. Summary
+
+Think of **Reflection** as a mirror. A Java class can look into this mirror to see its own structure and even "reach inside" to change itself while the program is in the middle of executing.
+
+----------------------------------------------------------------------------------------------------------------------------------------------
+
 
 
 
